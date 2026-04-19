@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analytics | URL Control</title>
+    <style>
+        :root {
+            --bg-0: #050a16;
+            --bg-1: #0b1731;
+            --bg-2: #0f2550;
+            --panel: rgba(14, 25, 52, 0.72);
+            --line: rgba(124, 168, 255, 0.28);
+            --text: #e8efff;
+            --muted: #9fb5e9;
+            --accent: #53f6ff;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 18% 18%, rgba(83, 246, 255, 0.18), transparent 35%),
+                radial-gradient(circle at 82% 14%, rgba(73, 165, 255, 0.22), transparent 32%),
+                linear-gradient(135deg, var(--bg-0), var(--bg-1) 45%, var(--bg-2));
+            padding: 26px;
+        }
+
+        .shell {
+            width: min(900px, 94vw);
+            margin: 0 auto;
+            display: grid;
+            gap: 16px;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 16px 38px rgba(5, 10, 25, 0.42);
+            padding: 20px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(125, 160, 255, 0.45);
+            color: #d5e4ff;
+            background: rgba(6, 19, 43, 0.55);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        h1 { margin: 0 0 8px; }
+        p { margin: 0 0 16px; color: var(--muted); }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(125, 160, 255, 0.38);
+            color: var(--text);
+            background: rgba(4, 12, 30, 0.65);
+            outline: none;
+        }
+
+        button {
+            padding: 12px 16px;
+            border: 0;
+            border-radius: 12px;
+            font-weight: 700;
+            color: #001b2a;
+            background: linear-gradient(120deg, var(--accent), #75ffdb);
+            cursor: pointer;
+        }
+
+        .result {
+            margin-top: 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(83, 246, 255, 0.34);
+            background: rgba(7, 27, 46, 0.56);
+            padding: 14px;
+            line-height: 1.55;
+            min-height: 82px;
+        }
+
+        pre {
+            margin: 0;
+            color: #cfe4ff;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        @media (max-width: 640px) {
+            .row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <section class="panel">
+            <a class="back-link" href="/">&#8592; Back to Landing</a>
+            <h1>Short URL Analytics</h1>
+            <p>Enter a short ID to fetch clicks and visit history.</p>
+
+            <form id="analytics-form">
+                <div class="row">
+                    <input id="short-id" type="text" placeholder="e.g. aB" required />
+                    <button type="submit">Fetch Analytics</button>
+                </div>
+            </form>
+
+            <div class="result">
+                <pre id="result-text">No analytics requested yet.</pre>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const form = document.getElementById('analytics-form');
+        const shortIdInput = document.getElementById('short-id');
+        const resultText = document.getElementById('result-text');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const shortId = shortIdInput.value.trim();
+            if (!shortId) return;
+
+            resultText.textContent = 'Loading...';
+
+            try {
+                const response = await fetch('/url/analytics/' + encodeURIComponent(shortId));
+                if (!response.ok) {
+                    throw new Error('Unable to fetch analytics for this short ID.');
+                }
+
+                const data = await response.json();
+                resultText.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultText.textContent = error.message;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,48 +1,459 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <style>
-        body {
-            font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-    </style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home page</title>
+    <title>Short URL Control Center</title>
+    <style>
+        :root {
+            --bg-0: #050a16;
+            --bg-1: #0b1731;
+            --bg-2: #0f2550;
+            --panel: rgba(14, 25, 52, 0.72);
+            --line: rgba(124, 168, 255, 0.28);
+            --text: #e8efff;
+            --muted: #9fb5e9;
+            --accent: #53f6ff;
+            --accent-2: #49a5ff;
+            --ok: #79ffcc;
+            --danger: #ff667f;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 15% 20%, rgba(83, 246, 255, 0.18), transparent 35%),
+                radial-gradient(circle at 82% 12%, rgba(73, 165, 255, 0.22), transparent 32%),
+                radial-gradient(circle at 50% 100%, rgba(127, 93, 255, 0.16), transparent 34%),
+                linear-gradient(135deg, var(--bg-0), var(--bg-1) 45%, var(--bg-2));
+            background-attachment: fixed;
+            overflow-x: hidden;
+        }
+
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.18;
+            background-image:
+                linear-gradient(rgba(140, 190, 255, 0.09) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(140, 190, 255, 0.09) 1px, transparent 1px);
+            background-size: 30px 30px;
+            mask-image: radial-gradient(circle at center, black 30%, transparent 90%);
+        }
+
+        .shell {
+            width: min(1140px, 92vw);
+            margin: 40px auto;
+            display: grid;
+            gap: 22px;
+            animation: riseIn 700ms ease-out both;
+        }
+
+        .panel {
+            position: relative;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 16px 38px rgba(5, 10, 25, 0.42), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+
+        .panel::before {
+            content: "";
+            position: absolute;
+            inset: -140px;
+            background: conic-gradient(from 180deg at 50% 50%, transparent, rgba(83, 246, 255, 0.1), transparent 35%);
+            animation: spinGlow 12s linear infinite;
+            pointer-events: none;
+        }
+
+        .panel > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero {
+            padding: 28px 28px 30px;
+        }
+
+        .top-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 12px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(125, 160, 255, 0.45);
+            color: #d5e4ff;
+            background: rgba(6, 19, 43, 0.55);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: transform 150ms ease, border-color 150ms ease, color 150ms ease;
+        }
+
+        .back-link:hover {
+            transform: translateX(-2px);
+            border-color: var(--accent);
+            color: #ffffff;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border-radius: 999px;
+            color: var(--accent);
+            border: 1px solid rgba(83, 246, 255, 0.45);
+            background: rgba(8, 35, 56, 0.4);
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(1.8rem, 3vw, 2.9rem);
+            line-height: 1.1;
+            letter-spacing: 0.02em;
+            text-shadow: 0 0 24px rgba(83, 246, 255, 0.22);
+        }
+
+        .subtext {
+            margin-top: 10px;
+            color: var(--muted);
+            max-width: 62ch;
+            line-height: 1.5;
+        }
+
+        .status-row {
+            margin-top: 18px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .quick-nav {
+            margin-top: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .quick-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(125, 160, 255, 0.45);
+            color: #d5e4ff;
+            background: rgba(6, 19, 43, 0.55);
+            text-decoration: none;
+            font-size: 0.88rem;
+            transition: border-color 150ms ease, color 150ms ease;
+        }
+
+        .quick-nav a:hover {
+            border-color: var(--accent);
+            color: #ffffff;
+        }
+
+        .chip {
+            border: 1px solid rgba(121, 255, 204, 0.45);
+            color: var(--ok);
+            background: rgba(10, 41, 38, 0.35);
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 22px;
+        }
+
+        .composer {
+            padding: 24px;
+        }
+
+        .section-title {
+            margin: 0 0 16px;
+            font-size: 1.14rem;
+            letter-spacing: 0.02em;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+        }
+
+        label {
+            display: block;
+            color: var(--muted);
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 13px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(125, 160, 255, 0.38);
+            color: var(--text);
+            background: rgba(4, 12, 30, 0.65);
+            outline: none;
+            transition: border-color 180ms, box-shadow 180ms;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(83, 246, 255, 0.15);
+        }
+
+        button {
+            padding: 13px 18px;
+            border: 0;
+            border-radius: 12px;
+            font-weight: 700;
+            color: #001b2a;
+            background: linear-gradient(120deg, var(--accent), #75ffdb);
+            cursor: pointer;
+            transition: transform 150ms ease, filter 150ms ease;
+            white-space: nowrap;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.05);
+        }
+
+        .result-box {
+            margin-top: 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(83, 246, 255, 0.34);
+            background: rgba(7, 27, 46, 0.56);
+            padding: 14px;
+            line-height: 1.55;
+        }
+
+        .result-box a {
+            color: var(--accent);
+            word-break: break-all;
+        }
+
+        .table-wrap {
+            padding: 24px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 14px;
+            background: rgba(5, 14, 32, 0.65);
+            border: 1px solid rgba(126, 164, 255, 0.28);
+        }
+
+        thead {
+            background: rgba(73, 165, 255, 0.16);
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(120, 160, 255, 0.19);
+            vertical-align: top;
+        }
+
+        th {
+            font-size: 12px;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            color: #c4d7ff;
+        }
+
+        tr:hover td {
+            background: rgba(83, 246, 255, 0.06);
+        }
+
+        td a {
+            color: #97fcff;
+            text-decoration: none;
+        }
+
+        td a:hover {
+            text-decoration: underline;
+        }
+
+        .empty {
+            color: var(--muted);
+            margin: 2px 0 0;
+        }
+
+        @keyframes riseIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px) scale(0.99);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes spinGlow {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 840px) {
+            .shell {
+                margin: 18px auto 28px;
+                width: 94vw;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .hero,
+            .composer,
+            .table-wrap {
+                padding: 18px;
+            }
+
+            table,
+            thead,
+            tbody,
+            th,
+            td,
+            tr {
+                display: block;
+                width: 100%;
+            }
+
+            thead {
+                display: none;
+            }
+
+            tr {
+                border-bottom: 1px solid rgba(120, 160, 255, 0.22);
+                padding: 12px 0;
+            }
+
+            td {
+                border: 0;
+                padding: 8px 0;
+            }
+
+            td::before {
+                content: attr(data-label) ": ";
+                color: #a9bff1;
+                font-weight: 700;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Url Shortner</h1>
-    <% if (locals.id) { %>
-    <p>URL Generated:http://localhost:8001/short/<%= locals.id %></p>
-    <% } %>
-   <div>
-    <form method="POST" action="/url">
-        <label>Enter Your Original URL</label>
-        <input type="text" name="url" placeholder="https://example.com" />
-        <button type="submit">Generate</button>
-    </form>
-   </div>
-   <div>
-    <% if(locals.urls) { %>
-        <table>
-            <thead>
-                <th>S. No</th>
-                <th>Short ID</th>
-                <th>Redirect</th>
-                <th>Clicks</th> 
-            </thead>
-            <tbody>
-                <% urls.forEach((url, index) => { %>
-                    <tr>
-                <td><%= index + 1 %></td>
-                <td><%= url.shortId %></td>
-                <td><%= url.redirectUrl %></td>
-                <td><%= url.visitHistory.length %></td>
-                    </tr>
-                <% }) %>
-            </tbody>
-        </table>
-        <% } %>
-   </div>
+    <div class="grid-overlay"></div>
+
+    <main class="shell">
+        <section class="panel hero">
+            <div class="top-actions">
+                <a class="back-link" href="/">&#8592; Back to Landing</a>
+            </div>
+            <span class="badge">Neural Link Active</span>
+            <h1>URL Compression Command Deck</h1>
+            <p class="subtext">
+                Convert long links into compact smart routes, monitor usage instantly, and keep your short links organized in one futuristic control center.
+            </p>
+            <div class="status-row">
+                <span class="chip">Server: Online</span>
+                <span class="chip">Port: 8001</span>
+                <span class="chip">Mode: Real-Time</span>
+            </div>
+            <div class="quick-nav">
+                <a href="/analytics">Open Analytics</a>
+            </div>
+        </section>
+
+        <section class="main-grid">
+            <article class="panel composer">
+                <h2 class="section-title">Create New Short Link</h2>
+                <form method="POST" action="/url">
+                    <label for="url-input">Enter Original URL</label>
+                    <div class="form-row">
+                        <input id="url-input" type="text" name="url" placeholder="https://example.com/very/long/url" required />
+                        <button type="submit">Generate</button>
+                    </div>
+                </form>
+
+                <% if (locals.id) { %>
+                    <div class="result-box">
+                        <strong>Link Created:</strong>
+                        <div>
+                            <a href="/short/<%= locals.id %>" target="_blank" rel="noopener noreferrer">http://localhost:8001/short/<%= locals.id %></a>
+                        </div>
+                        <div>
+                            Analytics: <a href="/url/analytics/<%= locals.id %>" target="_blank" rel="noopener noreferrer">/url/analytics/<%= locals.id %></a>
+                        </div>
+                    </div>
+                <% } %>
+            </article>
+
+            <article class="panel table-wrap">
+                <h2 class="section-title">Stored Links</h2>
+                <% if (locals.urls && urls.length) { %>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>S. No</th>
+                                <th>Short ID</th>
+                                <th>Redirect URL</th>
+                                <th>Clicks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% urls.forEach((url, index) => { %>
+                                <tr>
+                                    <td data-label="S. No"><%= index + 1 %></td>
+                                    <td data-label="Short ID">
+                                        <a href="/short/<%= url.shortId %>" target="_blank" rel="noopener noreferrer"><%= url.shortId %></a>
+                                    </td>
+                                    <td data-label="Redirect URL">
+                                        <a href="<%= url.redirectUrl %>" target="_blank" rel="noopener noreferrer"><%= url.redirectUrl %></a>
+                                    </td>
+                                    <td data-label="Clicks"><%= url.visitHistory.length %></td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                <% } else { %>
+                    <p class="empty">No URLs created yet. Generate your first short link above.</p>
+                <% } %>
+            </article>
+        </section>
+    </main>
 </body>
 </html>

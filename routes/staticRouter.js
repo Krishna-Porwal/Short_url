@@ -12,4 +12,8 @@ router.get('/', async (req, res) => {
 
 });
 
+router.get('/analytics', (req, res) => {
+    return res.render('analytics');
+});
+
 module.exports = router;
