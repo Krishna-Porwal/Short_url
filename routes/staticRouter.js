@@ -4,11 +4,15 @@ const URL = require('../models/url');
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-    const allUrls = await URL.find({});
+    try {
+        const allUrls = await URL.find({});
 
-    return res.render('home',
-        { urls: allUrls, }
-    );
+        return res.render('home', { urls: allUrls });
+    } catch (error) {
+        return res.status(503).render('home', {
+            urls: [],
+        });
+    }
 
 });
 

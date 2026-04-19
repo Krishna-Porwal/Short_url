@@ -6,11 +6,7 @@ const URL = require('./models/url');
 const staticRoute = require('./routes/staticRouter');
 const path = require('path');
 const app = express();
-const port = 8001;
-
-connectToMongoDB(process.env.MONGODB_URI)
-    .then(() => console.log('Connected to MongoDB'))
-    .catch((err) => console.error('Failed to connect to MongoDB', err));
+const port = process.env.PORT || 8001;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -23,21 +19,29 @@ app.use('/', staticRoute);
 
 
 app.get('/short/:shortId', async (req, res) => {
-    const shortId = req.params.shortId;
-    const entry = await URL.findOneAndUpdate(
-        {
-            shortId
-        }, {
-        $push: {
-            visitHistory: {
-                timestamp: Date.now(),
+    try {
+        const shortId = req.params.shortId;
+        const entry = await URL.findOneAndUpdate(
+            {
+                shortId,
             },
+            {
+                $push: {
+                    visitHistory: {
+                        timestamp: Date.now(),
+                    },
+                },
+            }
+        );
+
+        if (!entry) {
+            return res.status(404).send('Short URL not found');
         }
+
+        return res.redirect(entry.redirectUrl);
+    } catch (error) {
+        return res.status(503).send('Database is temporarily unavailable. Please try again.');
     }
-
-    );
-    res.redirect(entry?.redirectUrl);
-
 });
 
 
@@ -50,4 +54,12 @@ app.get('/short/:shortId', async (req, res) => {
 
 
 
-app.listen(port, () => console.log(`Server running on port ${port}`));
+connectToMongoDB(process.env.MONGODB_URI)
+    .then(() => {
+        console.log('Connected to MongoDB');
+        app.listen(port, () => console.log(`Server running on port ${port}`));
+    })
+    .catch((err) => {
+        console.error('Failed to connect to MongoDB', err);
+        process.exit(1);
+    });
