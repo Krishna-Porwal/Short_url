@@ -390,7 +390,6 @@
             </p>
             <div class="status-row">
                 <span class="chip">Server: Online</span>
-                <span class="chip">Port: 8001</span>
                 <span class="chip">Mode: Real-Time</span>
             </div>
             <div class="quick-nav">
@@ -413,7 +412,7 @@
                     <div class="result-box">
                         <strong>Link Created:</strong>
                         <div>
-                            <a href="/short/<%= locals.id %>" target="_blank" rel="noopener noreferrer">http://localhost:8001/short/<%= locals.id %></a>
+                            <a href="<%= locals.shortUrl || ('/short/' + locals.id) %>" target="_blank" rel="noopener noreferrer"><%= locals.shortUrl || ((locals.baseUrl || '') + '/short/' + locals.id) %></a>
                         </div>
                         <div>
                             Analytics: <a href="/url/analytics/<%= locals.id %>" target="_blank" rel="noopener noreferrer">/url/analytics/<%= locals.id %></a>

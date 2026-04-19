@@ -1,5 +1,17 @@
 const {nanoid} = require('nanoid');
 const URL = require('../models/url');
+
+function getBaseUrl(req) {
+    if (process.env.PUBLIC_BASE_URL) {
+        return process.env.PUBLIC_BASE_URL.replace(/\/$/, '');
+    }
+    const forwardedProto = req.headers['x-forwarded-proto'];
+    const protocol = forwardedProto ? forwardedProto.split(',')[0] : req.protocol;
+    const forwardedHost = req.headers['x-forwarded-host'];
+    const host = forwardedHost ? forwardedHost.split(',')[0] : req.get('host');
+    return `${protocol}://${host}`;
+}
+
 async function handleGenerateShortUrl(req,res){
     try {
         const body = req.body;
@@ -12,8 +24,13 @@ async function handleGenerateShortUrl(req,res){
             redirectUrl: body.url,
             visitHistory: [],
         });
+        const allUrls = await URL.find({});
+        const shortUrl = `${getBaseUrl(req)}/short/${shortId}`;
         return res.render ('home',{
+            urls: allUrls,
             id: shortId,
+            shortUrl,
+            baseUrl: getBaseUrl(req),
         });
     } catch (error) {
         return res.status(503).json({ error: 'Database is temporarily unavailable' });

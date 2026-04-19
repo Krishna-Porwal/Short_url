@@ -8,6 +8,13 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 8001;
 
+app.set('trust proxy', 1);
+
+if (!process.env.MONGODB_URI) {
+    console.error('Missing required environment variable: MONGODB_URI');
+    process.exit(1);
+}
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
